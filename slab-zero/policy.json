@@ -1,12 +1,21 @@
 {
   "policy_id": "SLAB-ZERO-POLICY",
-  "policy_version": "1.1",
+  "policy_version": "1.2",
   "verification_rules": {
     "allow_ai_only_promotion": false,
     "require_external_evidence": true,
     "require_evidence_locator": true,
     "require_signed_evidence": true,
     "fail_closed": true
+  },
+  "provenance": {
+    "required": true,
+    "oidc_issuer": "https://token.actions.githubusercontent.com",
+    "require_exact_repository": true,
+    "require_exact_workflow_ref": true,
+    "require_exact_commit": true,
+    "require_exact_run_id": true,
+    "require_transparency_log_reference": true
   },
   "drift_watch": {
     "enabled": true,
