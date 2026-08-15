@@ -2,7 +2,7 @@ name: Slab-Zero Provenance
 
 on:
   push:
-    branches: [main]
+    branches: [main, slab-zero-complete-implementation]
     paths:
       - 'slab-zero/**'
   workflow_dispatch:
@@ -67,7 +67,7 @@ jobs:
       - name: Verify provenance signature and identity
         working-directory: slab-zero
         env:
-          EXPECTED_IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/slab-zero-provenance.yml@refs/heads/main
+          EXPECTED_IDENTITY: https://github.com/${{ github.workflow_ref }}
           EXPECTED_ISSUER: https://token.actions.githubusercontent.com
         run: |
           cosign verify-blob proofs/provenance-payload.json \
@@ -92,6 +92,7 @@ jobs:
               "certificate_identity": f"https://github.com/{os.environ['WORKFLOW_REF']}",
               "rekor_log_index": index_path.read_text().strip(),
               "signature_bundle_sha256": hashlib.sha256(bundle_path.read_bytes()).hexdigest(),
+              "signature_verified": True,
           })
           if not record["rekor_log_index"].isdigit():
               raise SystemExit("Invalid transparency-log index; refusing provenance record")
@@ -109,9 +110,9 @@ jobs:
           import json, os, sys
           from pathlib import Path
           sys.path.insert(0, str(Path("slab-zero").resolve()))
-          import gatekeeper
+          from gatekeeper.provenance import validate_provenance
           proof = json.loads(Path("slab-zero/proofs/provenance-record.json").read_text())
-          ok, reason = gatekeeper.validate_provenance_identity(
+          ok, reason = validate_provenance(
               proof,
               expected_repository=os.environ["EXPECTED_REPOSITORY"],
               expected_commit=os.environ["EXPECTED_COMMIT"],
