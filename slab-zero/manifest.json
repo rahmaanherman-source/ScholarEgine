@@ -1,0 +1,12 @@
+{
+  "project_id": "SLAB-ZERO",
+  "schema_version": "1.1",
+  "verified_items": [],
+  "merkle_root": null,
+  "last_verified_at": null,
+  "completion_percentage": 0.0,
+  "audit": {
+    "last_drift_check": null,
+    "drift_detected": false
+  }
+}
