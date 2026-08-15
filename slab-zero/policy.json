@@ -1,0 +1,21 @@
+{
+  "policy_id": "SLAB-ZERO-POLICY",
+  "policy_version": "1.1",
+  "verification_rules": {
+    "allow_ai_only_promotion": false,
+    "require_external_evidence": true,
+    "require_evidence_locator": true,
+    "require_signed_evidence": true,
+    "fail_closed": true
+  },
+  "drift_watch": {
+    "enabled": true,
+    "schedule": "daily",
+    "probe_types": ["git", "deps"],
+    "stale_after_seconds": 86400
+  },
+  "completion": {
+    "method": "verified_item_count",
+    "verified_state_only": true
+  }
+}
