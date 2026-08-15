@@ -35,7 +35,6 @@ jobs:
           python - <<'PY'
           import hashlib, json, os
           from pathlib import Path
-
           root = Path("slab-zero")
           files = []
           for p in sorted(root.rglob("*")):
@@ -59,7 +58,11 @@ jobs:
 
       - name: Sign provenance payload with GitHub OIDC
         working-directory: slab-zero
-        run: cosign sign-blob proofs/provenance-payload.json --bundle proofs/provenance.sigstore.json --yes
+        run: |
+          set -o pipefail
+          cosign sign-blob proofs/provenance-payload.json --bundle proofs/provenance.sigstore.json --yes 2>&1 | tee proofs/signing.log
+          grep -Eo 'tlog entry created with index: [0-9]+' proofs/signing.log | tail -1 | awk '{print $6}' > proofs/rekor-log-index.txt
+          test -s proofs/rekor-log-index.txt
 
       - name: Verify provenance signature and identity
         working-directory: slab-zero
@@ -74,8 +77,6 @@ jobs:
 
       - name: Build Gatekeeper provenance record
         env:
-          COMMIT_SHA: ${{ github.sha }}
-          RUN_ID: ${{ github.run_id }}
           WORKFLOW_REF: ${{ github.workflow_ref }}
         working-directory: slab-zero
         run: |
@@ -84,17 +85,16 @@ jobs:
           from pathlib import Path
           payload_path = Path("proofs/provenance-payload.json")
           bundle_path = Path("proofs/provenance.sigstore.json")
+          index_path = Path("proofs/rekor-log-index.txt")
           payload = json.loads(payload_path.read_text())
-          bundle = json.loads(bundle_path.read_text())
-          tlogs = bundle.get("verificationMaterial", {}).get("tlogEntries", [])
-          if not tlogs:
-              raise SystemExit("No transparency-log entry found; refusing provenance record")
           record = dict(payload)
           record.update({
               "certificate_identity": f"https://github.com/{os.environ['WORKFLOW_REF']}",
-              "rekor_log_index": str(tlogs[0]["logIndex"]),
+              "rekor_log_index": index_path.read_text().strip(),
               "signature_bundle_sha256": hashlib.sha256(bundle_path.read_bytes()).hexdigest(),
           })
+          if not record["rekor_log_index"].isdigit():
+              raise SystemExit("Invalid transparency-log index; refusing provenance record")
           Path("proofs/provenance-record.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
           PY
 
