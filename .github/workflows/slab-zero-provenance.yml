@@ -1,0 +1,134 @@
+name: Slab-Zero Provenance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'slab-zero/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Build canonical provenance payload
+        env:
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          root = Path("slab-zero")
+          files = []
+          for p in sorted(root.rglob("*")):
+              if p.is_file() and ".git" not in p.parts:
+                  files.append({"path": p.as_posix(), "sha256": hashlib.sha256(p.read_bytes()).hexdigest()})
+          payload = {
+              "schema_version": "1.0",
+              "artifact_sha256": hashlib.sha256(json.dumps(files, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+              "commit_sha": os.environ["COMMIT_SHA"],
+              "repository": os.environ["REPOSITORY"],
+              "workflow_ref": os.environ["WORKFLOW_REF"],
+              "run_id": os.environ["RUN_ID"],
+              "oidc_issuer": "https://token.actions.githubusercontent.com",
+          }
+          Path("slab-zero/proofs").mkdir(exist_ok=True)
+          Path("slab-zero/proofs/provenance-payload.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+          PY
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.9.0
+
+      - name: Sign provenance payload with GitHub OIDC
+        working-directory: slab-zero
+        run: cosign sign-blob proofs/provenance-payload.json --bundle proofs/provenance.sigstore.json --yes
+
+      - name: Verify provenance signature and identity
+        working-directory: slab-zero
+        env:
+          EXPECTED_IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/slab-zero-provenance.yml@refs/heads/main
+          EXPECTED_ISSUER: https://token.actions.githubusercontent.com
+        run: |
+          cosign verify-blob proofs/provenance-payload.json \
+            --bundle proofs/provenance.sigstore.json \
+            --certificate-identity="$EXPECTED_IDENTITY" \
+            --certificate-oidc-issuer="$EXPECTED_ISSUER"
+
+      - name: Build Gatekeeper provenance record
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        working-directory: slab-zero
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          payload_path = Path("proofs/provenance-payload.json")
+          bundle_path = Path("proofs/provenance.sigstore.json")
+          payload = json.loads(payload_path.read_text())
+          bundle = json.loads(bundle_path.read_text())
+          tlogs = bundle.get("verificationMaterial", {}).get("tlogEntries", [])
+          if not tlogs:
+              raise SystemExit("No transparency-log entry found; refusing provenance record")
+          record = dict(payload)
+          record.update({
+              "certificate_identity": f"https://github.com/{os.environ['WORKFLOW_REF']}",
+              "rekor_log_index": str(tlogs[0]["logIndex"]),
+              "signature_bundle_sha256": hashlib.sha256(bundle_path.read_bytes()).hexdigest(),
+          })
+          Path("proofs/provenance-record.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+          PY
+
+      - name: Validate provenance bindings with Gatekeeper
+        env:
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+          EXPECTED_WORKFLOW_REF: ${{ github.workflow_ref }}
+          EXPECTED_RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path("slab-zero").resolve()))
+          import gatekeeper
+          proof = json.loads(Path("slab-zero/proofs/provenance-record.json").read_text())
+          ok, reason = gatekeeper.validate_provenance_identity(
+              proof,
+              expected_repository=os.environ["EXPECTED_REPOSITORY"],
+              expected_commit=os.environ["EXPECTED_COMMIT"],
+              expected_workflow_ref=os.environ["EXPECTED_WORKFLOW_REF"],
+              expected_run_id=os.environ["EXPECTED_RUN_ID"],
+          )
+          if not ok:
+              print(reason)
+              raise SystemExit(1)
+          print(reason)
+          PY
+
+      - name: Upload signed provenance proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: slab-zero-provenance-${{ github.sha }}
+          path: |
+            slab-zero/proofs/provenance-payload.json
+            slab-zero/proofs/provenance.sigstore.json
+            slab-zero/proofs/provenance-record.json
