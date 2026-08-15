@@ -3,14 +3,9 @@
 
 Fail-closed verification ledger for project-specific Memory Slabs.
 
-Commands:
-  python gatekeeper.py verify ITEM_ID --evidence evidence/item.json --claim "..."
-  python gatekeeper.py drift
-  python gatekeeper.py status
-
-Evidence is a JSON bundle authenticated with HMAC-SHA256 using
-SLAB_VERIFIER_KEY. This is an initial local cryptographic gate; production
-non-repudiable signing (for example GitHub OIDC + Sigstore) is a later layer.
+The provenance layer is intentionally separate from promotion: a signed CI
+proof is necessary evidence, but the Gatekeeper must still validate claim
+scope, commit binding, policy binding, and test evidence before VERIFIED.
 """
 
 import argparse
@@ -96,6 +91,50 @@ def _secret():
     return secret.encode()
 
 
+def validate_provenance_identity(
+    proof,
+    expected_repository,
+    expected_commit,
+    expected_workflow_ref,
+    expected_run_id=None,
+):
+    """Validate the identity bindings carried by a CI provenance proof.
+
+    This is deliberately deterministic and fail-closed. Cryptographic
+    signature verification is performed by the CI signing/verifying tool;
+    this function validates that the verified identity refers to the exact
+    repository, workflow, commit, issuer, and (when supplied) run.
+    """
+    required = {
+        "artifact_sha256",
+        "commit_sha",
+        "repository",
+        "workflow_ref",
+        "oidc_issuer",
+        "certificate_identity",
+        "rekor_log_index",
+    }
+    missing = required - set(proof)
+    if missing:
+        return False, f"Missing provenance fields: {sorted(missing)}"
+    if proof["repository"] != expected_repository:
+        return False, "Provenance repository identity mismatch"
+    if proof["commit_sha"] != expected_commit:
+        return False, "Provenance commit SHA mismatch"
+    if proof["workflow_ref"] != expected_workflow_ref:
+        return False, "Provenance workflow reference mismatch"
+    expected_identity = f"https://github.com/{expected_workflow_ref}"
+    if proof["certificate_identity"] != expected_identity:
+        return False, "Provenance certificate identity mismatch"
+    if proof["oidc_issuer"] != "https://token.actions.githubusercontent.com":
+        return False, "Unexpected OIDC issuer"
+    if not str(proof["rekor_log_index"]).strip():
+        return False, "Missing transparency-log reference"
+    if expected_run_id is not None and str(proof.get("run_id")) != str(expected_run_id):
+        return False, "Provenance run identity mismatch (possible replay)"
+    return True, "Provenance identity is exactly bound"
+
+
 def verify_evidence_bundle(path, expected_commit, expected_claim=None):
     try:
         evidence = load_json(path)
@@ -174,13 +213,16 @@ def verify_item(item_id, evidence_path=None, claim=None, verifier_id="local-dev"
             "source_link": evidence["source_link"],
             "evidence_locator": evidence["evidence_locator"],
             "test_result": evidence["test_result"],
-            "verifier_id": verifier_id
+            "verifier_id": verifier_id,
         },
         "verification_hash": verification_hash,
-        "last_verified_at": timestamp
+        "last_verified_at": timestamp,
     })
     manifest["last_verified_at"] = timestamp
-    manifest["audit"] = {"last_drift_check": manifest.get("audit", {}).get("last_drift_check"), "drift_detected": False}
+    manifest["audit"] = {
+        "last_drift_check": manifest.get("audit", {}).get("last_drift_check"),
+        "drift_detected": False,
+    }
     update_completion(manifest)
     save_json(MANIFEST_PATH, manifest)
     print(f"[OK] {item_id} VERIFIED at commit {commit_sha}. Completion: {manifest['completion_percentage']}%")
@@ -201,7 +243,6 @@ def detect_git_drift(item):
 
 
 def detect_deps_drift(item):
-    # Only evaluate dependency lockfiles that were explicitly captured as evidence.
     expected = item.get("evidence", {}).get("dependency_lock_hashes", {})
     for relative, expected_hash in expected.items():
         path = REPO_ROOT / relative
