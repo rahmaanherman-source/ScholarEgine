@@ -1,10 +1,12 @@
 name: Slab-Zero Verify
+
 on:
   push:
-    paths: ['slab-zero/**','identity/**','docs/architecture/**']
+    paths: ['slab-zero/**', 'identity/**', 'docs/architecture/**']
   pull_request:
-    paths: ['slab-zero/**','identity/**','docs/architecture/**']
+    paths: ['slab-zero/**', 'identity/**', 'docs/architecture/**']
   workflow_dispatch:
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -23,11 +25,12 @@ jobs:
       - name: Run complete test suite
         run: python -m pytest -q
       - name: Confirm ledger remains fail-closed
-        run: python - <<'PY'
-import json
-m=json.load(open('manifest.json'))
-assert m['completion_percentage'] == 0.0
-assert m['verified_items'] == []
-assert m['merkle_root'] is None
-print('Empty ledger correctly preserved.')
-PY
+        run: |
+          python - <<'PY'
+          import json
+          m = json.load(open('manifest.json'))
+          assert m['completion_percentage'] == 0.0
+          assert m['verified_items'] == []
+          assert m['merkle_root'] is None
+          print('Empty ledger correctly preserved.')
+          PY
