@@ -7,3 +7,5 @@ The manifest is the machine-readable state ledger. It contains only proven state
 Completion is weighted and derived from roadmap items. A section can be verified and used independently; that does not imply the entire project is complete.
 
 Never manually edit a status to VERIFIED or a completion percentage. The authorized Gatekeeper state transition must establish those values from evidence and provenance.
+
+Provenance runs bind the exact repository, commit, workflow reference, run identity, signature, and transparency-log reference before a proof can be accepted by the strict Gatekeeper.
