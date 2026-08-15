@@ -16,7 +16,7 @@ class RoadmapCoverageTests(unittest.TestCase):
             "GATEKEEPER": ["tests/test_gatekeeper.py", "tests/test_state_machine.py"],
             "FRAUD": ["tests/test_fraudulent_green.py", "tests/test_provenance_gate.py"],
             "DRIFT": ["tests/test_drift.py", "drift-watch/drift_watch.py"],
-            "CI": [".github/workflows/slab-zero-tests.yml", ".github/workflows/verify.yml"],
+            "CI": ["../.github/workflows/slab-zero-tests.yml", "../.github/workflows/verify.yml"],
             "DOCS": ["../docs/architecture/SLAB-ZERO-ARCHITECTURE.md", "../identity/repository.json"],
             "BASELINE": ["audits/slab-zero-baseline.json", "../.github/workflows/slab-zero-provenance.yml"],
         }
