@@ -10,3 +10,4 @@
 8. A change only stales claims whose recorded dependency/path set is affected.
 9. Repository identity changes are aliases/history events, not destructive rewrites.
 10. No manual manifest edit may create a VERIFIED state without a valid authorized state transition.
+11. CI must reproduce the verification suite from a clean checkout before a release baseline can be certified.
