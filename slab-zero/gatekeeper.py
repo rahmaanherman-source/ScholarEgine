@@ -9,11 +9,10 @@ import json
 import subprocess
 from pathlib import Path
 
-# Allow ``import gatekeeper.lib`` even though this compatibility entrypoint
-# retains the historical gatekeeper.py path.
 __path__ = [str(Path(__file__).with_name("gatekeeper"))]
 
 from gatekeeper.gatekeeper import derive_percentages, merkle_root, verify_item as verify_candidate
+from gatekeeper.provenance import validate_provenance
 
 ROOT = Path(__file__).resolve().parent
 
@@ -31,6 +30,33 @@ def current_commit_sha():
     if result.returncode != 0:
         raise RuntimeError("Unable to determine current Git commit SHA")
     return result.stdout.strip()
+
+
+def validate_provenance_identity(proof, expected_repository, expected_commit, expected_workflow_ref, expected_run_id=None):
+    """Compatibility identity check retained for existing provenance tests.
+
+    Promotion uses the stricter ``gatekeeper.provenance.validate_provenance``
+    function, which requires run identity and cryptographic verification.
+    """
+    required = {"artifact_sha256", "commit_sha", "repository", "workflow_ref", "oidc_issuer", "certificate_identity", "rekor_log_index"}
+    missing = required - set(proof)
+    if missing:
+        return False, f"Missing provenance fields: {sorted(missing)}"
+    if proof["repository"] != expected_repository:
+        return False, "Provenance repository identity mismatch"
+    if proof["commit_sha"] != expected_commit:
+        return False, "Provenance commit SHA mismatch"
+    if proof["workflow_ref"] != expected_workflow_ref:
+        return False, "Provenance workflow reference mismatch"
+    if proof["certificate_identity"] != f"https://github.com/{expected_workflow_ref}":
+        return False, "Provenance certificate identity mismatch"
+    if proof["oidc_issuer"] != "https://token.actions.githubusercontent.com":
+        return False, "Unexpected OIDC issuer"
+    if not str(proof["rekor_log_index"]).strip():
+        return False, "Missing transparency-log reference"
+    if expected_run_id is not None and str(proof.get("run_id")) != str(expected_run_id):
+        return False, "Provenance run identity mismatch (possible replay)"
+    return True, "Provenance identity is exactly bound"
 
 
 def update_completion(manifest):
@@ -77,7 +103,6 @@ def main():
     if args.command == "drift":
         raise SystemExit(0 if run_drift_check() else 2)
     print_status()
-
 
 if __name__ == "__main__":
     main()
