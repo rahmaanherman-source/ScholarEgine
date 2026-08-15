@@ -82,6 +82,36 @@ jobs:
             --certificate-identity="$EXPECTED_IDENTITY" \
             --certificate-oidc-issuer="$EXPECTED_ISSUER"
 
+      - name: Build Gatekeeper provenance record
+        env:
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        working-directory: slab-zero
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          payload_path = Path("proofs/provenance-payload.json")
+          bundle_path = Path("proofs/provenance.sigstore.json")
+          payload = json.loads(payload_path.read_text())
+          bundle = json.loads(bundle_path.read_text())
+          tlogs = bundle.get("verificationMaterial", {}).get("tlogEntries", [])
+          if not tlogs:
+              raise SystemExit("No transparency-log entry found; refusing provenance record")
+          record = dict(payload)
+          record.update({
+              "certificate_identity": f"https://github.com/{os.environ['WORKFLOW_REF']}",
+              "rekor_log_index": str(tlogs[0]["logIndex"]),
+              "signature_bundle_sha256": hashlib.sha256(bundle_path.read_bytes()).hexdigest(),
+          })
+          Path("proofs/provenance-record.json").write_text(
+              json.dumps(record, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+
       - name: Validate provenance bindings with Gatekeeper
         env:
           EXPECTED_REPOSITORY: ${{ github.repository }}
@@ -95,7 +125,7 @@ jobs:
           sys.path.insert(0, str(Path("slab-zero").resolve()))
           import gatekeeper
 
-          proof = json.loads(Path("slab-zero/proofs/provenance-payload.json").read_text())
+          proof = json.loads(Path("slab-zero/proofs/provenance-record.json").read_text())
           ok, reason = gatekeeper.validate_provenance_identity(
               proof,
               expected_repository=os.environ["EXPECTED_REPOSITORY"],
@@ -116,3 +146,4 @@ jobs:
           path: |
             slab-zero/proofs/provenance-payload.json
             slab-zero/proofs/provenance.sigstore.json
+            slab-zero/proofs/provenance-record.json
