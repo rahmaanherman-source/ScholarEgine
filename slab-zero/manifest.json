@@ -1,12 +1,13 @@
 {
+  "audit": {
+    "details": [],
+    "drift_detected": false,
+    "last_drift_check": 1786781351
+  },
+  "completion_percentage": 0.0,
+  "last_verified_at": null,
+  "merkle_root": null,
   "project_id": "SLAB-ZERO",
   "schema_version": "1.1",
-  "verified_items": [],
-  "merkle_root": null,
-  "last_verified_at": null,
-  "completion_percentage": 0.0,
-  "audit": {
-    "last_drift_check": null,
-    "drift_detected": false
-  }
+  "verified_items": []
 }
