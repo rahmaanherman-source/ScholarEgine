@@ -1,0 +1,8 @@
+{
+  "project_id":"SLAB-ZERO",
+  "canonical_repository":"rahmaanherman-source/ScholarEgine",
+  "current_path":"slab-zero",
+  "aliases":["ScholarEgine","Slab-Zero"],
+  "rename_history":[],
+  "identity_rule":"Project identity is stable even when repository display names or paths change. Historical evidence locators are preserved; new aliases are appended rather than rewriting history."
+}

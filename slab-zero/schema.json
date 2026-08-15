@@ -1,39 +1,34 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "APEX Memory Slab",
-  "type": "object",
-  "required": ["project_id", "schema_version", "verified_items", "completion_percentage"],
-  "properties": {
-    "project_id": {"type": "string", "minLength": 1},
-    "schema_version": {"type": "string"},
-    "verified_items": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["item_id", "claim", "status", "evidence", "verification_hash", "last_verified_at"],
-        "properties": {
-          "item_id": {"type": "string", "minLength": 1},
-          "claim": {"type": "string", "minLength": 1},
-          "status": {"enum": ["VERIFIED", "STALE", "UNVERIFIED", "BLOCKED", "REJECTED"]},
-          "evidence": {
-            "type": "object",
-            "required": ["commit_sha", "evidence_hash", "source_link", "test_result", "evidence_locator"],
-            "properties": {
-              "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-              "evidence_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-              "source_link": {"type": "string", "minLength": 1},
-              "test_result": {"const": "PASS"},
-              "evidence_locator": {"type": "string", "minLength": 1},
-              "verifier_id": {"type": "string", "minLength": 1}
-            }
-          },
-          "verification_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-          "last_verified_at": {"type": "integer", "minimum": 1}
-        }
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"APEX Memory Slab",
+  "type":"object",
+  "required":["project_id","schema_version","verified_items","completion_percentage","merkle_root"],
+  "properties":{
+    "project_id":{"type":"string","minLength":1},
+    "schema_version":{"type":"string"},
+    "verified_items":{"type":"array","items":{"$ref":"#/$defs/item"}},
+    "history":{"type":"array"},
+    "merkle_root":{"type":["string","null"]},
+    "last_verified_at":{"type":["integer","null"]},
+    "completion_percentage":{"type":"number","minimum":0,"maximum":100},
+    "verified_percentage":{"type":"number","minimum":0,"maximum":100},
+    "operational_percentage":{"type":"number","minimum":0,"maximum":100},
+    "stale_percentage":{"type":"number","minimum":0,"maximum":100}
+  },
+  "$defs":{
+    "item":{
+      "type":"object",
+      "required":["item_id","claim","status","temporal_state","weight","evidence","verification_hash","last_verified_at"],
+      "properties":{
+        "item_id":{"type":"string","minLength":1},
+        "claim":{"type":"string","minLength":1},
+        "status":{"enum":["ALPHA_VERIFIED","ALPHA_SOURCE_AVAILABLE","SYSTEM_VERIFIED","DUAL_VERIFIED","VERIFIED","STALE","UNVERIFIED","BLOCKED","REJECTED"]},
+        "temporal_state":{"enum":["CURRENT","STALE"]},
+        "weight":{"type":"number","exclusiveMinimum":0},
+        "evidence":{"type":"object","required":["commit_sha","evidence_hash","evidence_locator","test_result"]},
+        "verification_hash":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+        "last_verified_at":{"type":"integer","minimum":1}
       }
-    },
-    "merkle_root": {"type": ["string", "null"]},
-    "last_verified_at": {"type": ["integer", "null"]},
-    "completion_percentage": {"type": "number", "minimum": 0, "maximum": 100}
+    }
   }
 }

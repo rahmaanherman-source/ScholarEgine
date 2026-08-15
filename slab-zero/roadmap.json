@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "project_id": "SLAB-ZERO",
+  "items": [
+    {"item_id":"CONTRACT","title":"Repository contract and schemas","weight":10,"dependencies":[]},
+    {"item_id":"HASHING","title":"Canonical hashing","weight":10,"dependencies":["CONTRACT"]},
+    {"item_id":"SIGNATURES","title":"Cryptographic signatures","weight":10,"dependencies":["HASHING"]},
+    {"item_id":"EVIDENCE","title":"Evidence and Alpha verification","weight":10,"dependencies":["SIGNATURES"]},
+    {"item_id":"PROBES","title":"Deterministic probes","weight":10,"dependencies":["EVIDENCE"]},
+    {"item_id":"GATEKEEPER","title":"Fail-closed state machine","weight":15,"dependencies":["PROBES"]},
+    {"item_id":"FRAUD","title":"Fraudulent-green attack suite","weight":10,"dependencies":["GATEKEEPER"]},
+    {"item_id":"DRIFT","title":"Daily Drift Watch","weight":10,"dependencies":["PROBES"]},
+    {"item_id":"CI","title":"CI enforcement and audit","weight":5,"dependencies":["FRAUD","DRIFT"]},
+    {"item_id":"DOCS","title":"Documentation and identity mapping","weight":5,"dependencies":["CONTRACT"]},
+    {"item_id":"BASELINE","title":"Independent release baseline","weight":5,"dependencies":["CI","DOCS"]}
+  ]
+}

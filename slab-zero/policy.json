@@ -1,30 +1,23 @@
 {
-  "policy_id": "SLAB-ZERO-POLICY",
-  "policy_version": "1.2",
-  "verification_rules": {
-    "allow_ai_only_promotion": false,
-    "require_external_evidence": true,
-    "require_evidence_locator": true,
-    "require_signed_evidence": true,
-    "fail_closed": true
+  "policy_id":"SLAB-ZERO-POLICY",
+  "policy_version":"2.0",
+  "verification_rules":{
+    "fail_closed":true,
+    "allow_ai_only_promotion":false,
+    "require_external_evidence":true,
+    "require_evidence_locator":true,
+    "require_signed_evidence":true,
+    "authorized_writer":"CI_PROVENANCE_GATE"
   },
-  "provenance": {
-    "required": true,
-    "oidc_issuer": "https://token.actions.githubusercontent.com",
-    "require_exact_repository": true,
-    "require_exact_workflow_ref": true,
-    "require_exact_commit": true,
-    "require_exact_run_id": true,
-    "require_transparency_log_reference": true
+  "provenance":{
+    "required":true,
+    "oidc_issuer":"https://token.actions.githubusercontent.com",
+    "require_exact_repository":true,
+    "require_exact_workflow_ref":true,
+    "require_exact_commit":true,
+    "require_exact_run_id":true,
+    "require_transparency_log_reference":true
   },
-  "drift_watch": {
-    "enabled": true,
-    "schedule": "daily",
-    "probe_types": ["git", "deps"],
-    "stale_after_seconds": 86400
-  },
-  "completion": {
-    "method": "verified_item_count",
-    "verified_state_only": true
-  }
+  "drift_watch":{"enabled":true,"schedule":"daily","probe_types":["git","deps","api","standards","evidence"]},
+  "completion":{"method":"weighted_verified_current","verified_state_only":true,"manual_percentage_input":false}
 }

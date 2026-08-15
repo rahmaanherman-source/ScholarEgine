@@ -1,0 +1,8 @@
+{
+  "project_id":"SLAB-ZERO",
+  "certification_status":"NOT_CERTIFIED",
+  "verified_items":0,
+  "completion_percentage":0.0,
+  "statement":"This baseline records repository verification infrastructure status only. It does not promote any project capability into VERIFIED memory.",
+  "requires_ci_reproduction":true
+}

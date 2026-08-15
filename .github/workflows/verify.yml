@@ -1,0 +1,33 @@
+name: Slab-Zero Verify
+on:
+  push:
+    paths: ['slab-zero/**','identity/**','docs/architecture/**']
+  pull_request:
+    paths: ['slab-zero/**','identity/**','docs/architecture/**']
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: slab-zero
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install verification dependencies
+        run: python -m pip install --disable-pip-version-check cryptography pytest
+      - name: Run complete test suite
+        run: python -m pytest -q
+      - name: Confirm ledger remains fail-closed
+        run: python - <<'PY'
+import json
+m=json.load(open('manifest.json'))
+assert m['completion_percentage'] == 0.0
+assert m['verified_items'] == []
+assert m['merkle_root'] is None
+print('Empty ledger correctly preserved.')
+PY

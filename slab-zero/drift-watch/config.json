@@ -1,0 +1,1 @@
+{"schedule":"daily","probe_types":["git","deps","api","standards","evidence"],"fail_closed":true}
