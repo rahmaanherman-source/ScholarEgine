@@ -1,138 +1,46 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
-  Activity,
-  Archive,
-  ArrowUpRight,
-  Bell,
-  Bot,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  CircleHelp,
-  Clock3,
-  Command,
-  FileText,
-  FolderKanban,
-  LayoutGrid,
-  Menu,
-  MoreHorizontal,
-  PanelLeftClose,
-  Plus,
-  Search,
-  Send,
-  Settings2,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  X,
-  Zap,
+  Activity, AudioLines, Box, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Cloud,
+  Code2, Cpu, FileClock, Folder, Gauge, Globe2, LayoutGrid, Menu, Mic2, Play,
+  Plus, Radio, Search, Settings2, ShieldCheck, Sparkles, Store, TestTube2, Upload, Users, X,
 } from 'lucide-react'
 
-const rails = [
-  { name: 'AI CORE', icon: Bot, tone: 'sky' },
-  { name: 'CONSTRUCT', icon: FolderKanban, tone: 'amber' },
-  { name: 'TRADES', icon: Activity, tone: 'teal' },
-  { name: 'ATELIER', icon: LayoutGrid, tone: 'rose', active: true },
-]
-
-const stages = ['Capture', 'Transform', 'Preview', 'Approve', 'Share']
-
-const workItems = [
-  { title: 'Client intake brief', type: 'Brief', status: 'In review', time: '12 min ago', color: 'blue' },
-  { title: 'Concept board · Northstar', type: 'Board', status: 'Ready', time: 'Yesterday', color: 'violet' },
-  { title: 'Brand system v4', type: 'System', status: 'Approved', time: 'Aug 28', color: 'teal' },
-]
-
-function Rail({ name, icon: Icon, tone, active }: { name: string; icon: typeof Bot; tone: string; active?: boolean }) {
-  return (
-    <button className={`rail-item ${active ? 'rail-item-active' : ''}`} aria-label={`${name} workspace`}>
-      <span className={`rail-icon rail-${tone}`}><Icon size={17} strokeWidth={1.8} /></span>
-      <span>{name}</span>
-      {active && <span className="rail-dot" />}
-    </button>
-  )
-}
+const navigation = ['DASHBOARD', 'PROJECTS', 'TOOLS', 'ENGINES', 'CONNECTIONS', 'MARKETPLACE', 'AUDIT LOG', 'MEMORY SLABS', 'SETTINGS']
+const apps = ['Vercel', 'Figma', 'Canva', 'OpenAI', 'Codex', 'Replit', 'Hugging Face', 'Lovable', 'Jotform', 'Linear', 'Notion', 'Ramp', 'PostHog', 'Supabase', 'Descript', 'SharePoint', 'Outlook Calendar']
+const timeline = ['VIDEO', 'DIALOGUE', 'FOLEY', 'MUSIC', 'SFX']
 
 export default function Page() {
-  const [mobileNav, setMobileNav] = useState(false)
-  const [activeStage, setActiveStage] = useState(1)
-  const [showGabby, setShowGabby] = useState(false)
-  const [prompt, setPrompt] = useState('')
+  const [tab, setTab] = useState('CHARACTERS')
+  const [menu, setMenu] = useState(false)
   const [toast, setToast] = useState('')
-  const [collapsed, setCollapsed] = useState(false)
-  const [activePanel, setActivePanel] = useState<'none' | 'repair' | 'settings' | 'help'>('none')
-  const [repairStatus, setRepairStatus] = useState('Ready for observation')
-  const [ticket, setTicket] = useState('')
-
-  const stageCopy = useMemo(() => [
-    'Drop anything here. Gabby will sort the signal from the noise.',
-    'The brief has been normalized into a clear, reviewable structure.',
-    'Your workspace preview is ready for a final look before approval.',
-    'One decision remains: approve the proposed direction for sharing.',
-    'Package the approved work for your team and client channels.',
-  ][activeStage], [activeStage])
-
-  const notify = (message: string) => {
-    setToast(message)
-    window.setTimeout(() => setToast(''), 2800)
-  }
+  const [query, setQuery] = useState('')
+  const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2400) }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <div className="brand-lockup">
-          <button className="icon-button mobile-menu" onClick={() => setMobileNav(!mobileNav)} aria-label="Open navigation"><Menu size={20} /></button>
-          <div className="brand-mark"><span /><span /><span /></div>
-          <div><p className="brand-name">APEX <span>365</span></p><p className="brand-subtitle">Enterprise workspace</p></div>
-        </div>
-        <div className="topbar-actions">
-          <button className="command-button" aria-label="Open command menu"><Command size={15} /><span>Search anything</span><kbd>⌘ K</kbd></button>
-          <button className="icon-button" aria-label="Notifications" onClick={() => notify('You are all caught up')}><Bell size={18} /><i className="notification-dot" /></button>
-          <button className="avatar" aria-label="Open profile">AR</button>
-        </div>
+    <main className="terminal-shell">
+      <header className="terminal-header">
+        <button className="terminal-brand" onClick={() => notify('APEX Terminal home')}><span className="apex-symbol">A</span><span><strong>APEX TERMINAL</strong><small>REAL-TIME ENGINE</small></span></button>
+        <div className="terminal-search"><Search size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="GABBY, WHAT ARE WE BUILDING?" /><AudioLines size={22} className="wave-icon" /></div>
+        <div className="terminal-user"><span className="verified"><Check size={14} /> VERIFIED</span><span className="time">9:41 PM</span><button className="owner-avatar" aria-label="Open owner menu">AR</button><span className="owner"><strong>GODSPEED</strong><small>OWNER</small></span><ChevronDown size={16} /></div>
+        <button className="mobile-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Menu size={20} /></button>
       </header>
 
-      <div className="workspace-body">
-        <aside className={`sidebar ${mobileNav ? 'sidebar-open' : ''} ${collapsed ? 'sidebar-collapsed' : ''}`}>
-          <div className="sidebar-head"><span className="eyebrow">WORKSPACES</span><button className="icon-button" onClick={() => setCollapsed(!collapsed)} aria-label="Collapse navigation"><PanelLeftClose size={16} /></button></div>
-          <nav className="rail-list">{rails.map((rail) => <Rail key={rail.name} {...rail} />)}</nav>
-          <div className="sidebar-divider" />
-          <div className="sidebar-links">
-            <button className="sidebar-link"><Archive size={17} /> <span>Library</span></button>
-            <button className="sidebar-link"><Users size={17} /> <span>People & access</span></button>
-            <button className="sidebar-link"><ShieldCheck size={17} /> <span>Governance</span></button>
-          </div>
-          <div className="sidebar-bottom"><button className="sidebar-link" onClick={() => setActivePanel('settings')}><Settings2 size={17} /><span>Workspace settings</span></button><button className="sidebar-link" onClick={() => setActivePanel('help')}><CircleHelp size={17} /><span>Help center</span></button><button className="sidebar-link" onClick={() => setActivePanel('repair')}><ShieldCheck size={17} /><span>Fail-safe repair</span></button></div>
-        </aside>
+      <div className="terminal-grid">
+        <aside className={`terminal-nav ${menu ? 'is-open' : ''}`}><div className="panel-label">WORKSPACE</div>{navigation.map((item, index) => <button key={item} className={`nav-item ${index === 0 ? 'active' : ''}`} onClick={() => notify(`${item} workspace selected`)}>{[LayoutGrid, Folder, Code2, Cpu, Cloud, Store, FileClock, ShieldCheck, Settings2].map((Icon, i) => i === index ? <Icon key={item} size={16} /> : null)}<span>{item}</span></button>)}</aside>
 
-        <section className="content-area">
-          <div className="mobile-overlay" onClick={() => setMobileNav(false)} />
-          <div className="content-header">
-            <div><div className="breadcrumb"><span>ATELIER</span><ChevronRight size={13} /><span className="muted">Overview</span></div><h1>Atelier 360</h1><p className="lede">A shared studio for turning early signals into aligned, finished work.</p></div>
-            <div className="header-buttons"><button className="secondary-button" onClick={() => notify('Invite link copied')}><Users size={16} /> Invite</button><button className="primary-button" onClick={() => notify('New project created')}><Plus size={17} /> New project</button></div>
-          </div>
+        <aside className="connected-panel"><div className="panel-title"><strong>CONNECTED APPS</strong><span>ALL SYSTEMS VERIFIED</span></div><div className="app-list">{apps.map((app) => <button key={app} className="connected-app" onClick={() => notify(`${app} connection verified`)}><span className="app-glyph">{app.slice(0, 1)}</span><span>{app}</span><i /></button>)}</div></aside>
 
-          <div className="stats-row"><div className="stat-card"><span className="stat-label">ACTIVE PROJECTS</span><strong>08</strong><span className="stat-note positive">+2 this month</span></div><div className="stat-card"><span className="stat-label">IN REVIEW</span><strong>03</strong><span className="stat-note">Across 2 teams</span></div><div className="stat-card"><span className="stat-label">TEAM PULSE</span><strong>92%</strong><span className="stat-note positive"><Zap size={12} /> Healthy</span></div><div className="stat-card stat-card-wide"><span className="stat-label">LAST SYNC</span><strong>Just now</strong><span className="stat-note">All systems operational</span></div></div>
+        <section className="studio-panel"><div className="studio-title"><strong>3D CREATION STUDIO</strong><div className="studio-tabs">{['CREATE', 'CHARACTERS', 'WORLDS', 'ANIMATION', 'RENDER'].map((item) => <button key={item} className={tab === item ? 'selected' : ''} onClick={() => setTab(item)}>{item}</button>)}</div></div><div className="studio-stage"><div className="tool-rail">{[Sparkles, Box, Radio, Upload, Activity, AudioLines, Globe2, Gauge].map((Icon, index) => <button key={index} onClick={() => notify('Studio tool selected')}><Icon size={17} /></button>)}</div><div className="character-frame"><div className="frame-grid" /><div className="character-art"><div className="character-head" /><div className="character-body" /><div className="character-jacket" /><div className="character-chain" /></div><span className="frame-caption">CHARACTER / G-01</span></div><div className="asset-column"><div className="turntable"><div className="mini-character" /><div className="turntable-label">GODSPEED / FULL BODY</div></div><div className="material-grid">{['#1d2023','#68442f','#9d7141','#252c31','#101820','#46332a','#321d1a','#225d75'].map((color) => <button key={color} style={{ background: color }} onClick={() => notify('Material applied')} />)}</div></div></div><div className="studio-toolbar">{['SCULPT', 'MODEL', 'TEXTURE', 'RIG', 'ANIMATE', 'LIGHT', 'RENDER'].map((item, index) => <button key={item} onClick={() => notify(`${item} tool opened`)}>{[Sparkles, Box, Upload, Activity, Radio, Cloud, Play][index] && (() => { const Icon = [Sparkles, Box, Upload, Activity, Radio, Cloud, Play][index]; return <Icon size={15} /> })()}{item}</button>)}</div></section>
 
-          <div className="content-grid">
-            <section className="atelier-card workflow-card">
-              <div className="card-heading"><div><span className="eyebrow accent-eyebrow">FEATURED WORKFLOW</span><h2>From signal to shared direction</h2></div><button className="more-button" aria-label="More workflow options"><MoreHorizontal size={19} /></button></div>
-              <div className="stage-track">{stages.map((stage, index) => <button key={stage} className={`stage ${index === activeStage ? 'stage-current' : ''} ${index < activeStage ? 'stage-complete' : ''}`} onClick={() => setActiveStage(index)}><span className="stage-number">{index < activeStage ? <Check size={14} /> : `0${index + 1}`}</span><span>{stage}</span></button>)}</div>
-              <div className="workflow-canvas"><div className="canvas-glow" /><div className="canvas-label"><span className="live-dot" />LIVE WORKSPACE</div><div className="canvas-content"><div className="canvas-icon"><Sparkles size={24} /></div><h3>{stages[activeStage]} is the next move.</h3><p>{stageCopy}</p><button className="canvas-action" onClick={() => notify(`${stages[activeStage]} workspace opened`)}>Open {stages[activeStage]} <ArrowUpRight size={15} /></button></div><div className="canvas-footer"><span>Northstar / Q3 launch</span><span>Private · 4 collaborators</span></div></div>
-            </section>
-
-            <aside className="atelier-card gabby-card"><div className="gabby-header"><div className="gabby-avatar"><Bot size={20} /></div><div><h2>Gabby</h2><p>Your studio guide</p></div><span className="online-status">Online</span></div><div className="gabby-message"><p>Good morning, Alex. I found three signals across your active workspaces that may need a decision today.</p><button onClick={() => setShowGabby(true)}>Show me <ArrowUpRight size={14} /></button></div><div className="gabby-suggestions"><button onClick={() => setShowGabby(true)}>Summarize project status</button><button onClick={() => setShowGabby(true)}>Find open decisions</button></div><button className="gabby-input" onClick={() => setShowGabby(true)}><span>Ask Gabby anything...</span><Send size={15} /></button></aside>
-          </div>
-
-          <section className="projects-section"><div className="section-heading"><div><span className="eyebrow">RECENT WORK</span><h2>Keep the signal moving</h2></div><button className="text-button" onClick={() => notify('Opening project library')}>View library <ArrowUpRight size={14} /></button></div><div className="project-table">{workItems.map((item) => <button className="project-row" key={item.title} onClick={() => notify(`${item.title} opened`)}><span className={`project-type project-${item.color}`}><FileText size={16} /></span><span className="project-name"><strong>{item.title}</strong><small>{item.type}</small></span><span className={`status status-${item.status.toLowerCase().replace(' ', '-')}`}><i />{item.status}</span><span className="project-time"><Clock3 size={14} />{item.time}</span><ChevronRight className="row-chevron" size={17} /></button>)}</div></section>
-        </section>
+        <aside className="right-stack"><section className="gabby-terminal"><div className="right-title cyan">CONCIERGE: GABBY</div><div className="gabby-portrait"><div className="portrait-face" /><p>All systems online.<br />What are we<br />building tonight?</p></div><div className="gabby-actions"><button onClick={() => notify('New project ready')}>NEW PROJECT</button><button onClick={() => notify('Project browser opened')}>OPEN PROJECT</button></div></section><section className="project-status"><div className="right-title">PROJECT: GODSPEED</div><strong>STATUS: VERIFIED</strong><div className="progress"><span /></div><small>87%</small></section><section className="engine-panel"><div className="right-title">ENGINES</div><div className="engine-grid">{[['APEX ENGINE','REAL-TIME',Sparkles],['APEX RENDER','PHOTOREAL',Cloud],['PHYSICS','ADVANCED',Activity],['AUDIO ENGINE','SPATIAL',AudioLines],['AI GENERATION','MULTI-MODEL',Bot],['WORLD BUILDER','PROCEDURAL',Globe2]].map(([name, sub, Icon]) => <button key={name as string} onClick={() => notify(`${name} online`)}><Icon size={19} /><span><strong>{name as string}</strong><small>{sub as string}</small></span></button>)}</div></section></aside>
       </div>
 
-      {showGabby && <div className="gabby-modal" role="dialog" aria-modal="true" aria-label="Gabby assistant"><div className="modal-panel"><div className="modal-header"><div className="gabby-avatar"><Bot size={20} /></div><div><h2>Talk to Gabby</h2><p>Context-aware studio assistance</p></div><button className="icon-button" onClick={() => setShowGabby(false)} aria-label="Close Gabby"><X size={18} /></button></div><div className="chat-bubble">I’m ready. Ask me to synthesize work, surface decisions, or prepare the next handoff.</div><div className="prompt-row"><input value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) { notify(prompt ? 'Gabby is preparing a response' : 'Try asking about your projects'); setPrompt('') } }} placeholder="Ask about your workspace..." autoFocus /><button onClick={() => { notify('Gabby is preparing a response'); setPrompt('') }} aria-label="Send prompt"><Send size={16} /></button></div></div></div>}
-      {activePanel !== 'none' && <div className="ops-overlay" role="dialog" aria-modal="true" aria-label={`${activePanel} panel`}><section className="ops-panel"><div className="modal-header"><div><span className="eyebrow accent-eyebrow">APEX OPERATIONS</span><h2>{activePanel === 'repair' ? 'Fail-safe repair' : activePanel === 'settings' ? 'Workspace settings' : 'Operator manual & help desk'}</h2></div><button className="icon-button" onClick={() => setActivePanel('none')} aria-label="Close panel"><X size={18} /></button></div>{activePanel === 'repair' && <div className="ops-body"><p className="ops-lede">Root-cause first. Observe → reproduce → diagnose → repair → verify → record.</p><div className="repair-status"><span className="live-dot" />{repairStatus}</div><div className="repair-actions"><button className="primary-button" onClick={() => setRepairStatus('Audit complete · no destructive changes')}>Run diagnostic</button><button className="secondary-button" onClick={() => setRepairStatus('Checkpoint created · ready for verification')}>Create checkpoint</button></div><div className="ops-list"><div><strong>Level 0</strong><span>Observation and reproduction</span></div><div><strong>Level 1–3</strong><span>Configuration, data, and state</span></div><div><strong>Level 4–10</strong><span>Component, layout, routing, integration, build</span></div></div></div>}{activePanel === 'settings' && <div className="ops-body"><p className="ops-lede">Secrets stay on the server. Names can be classified; values are never requested here.</p><label className="setting-row"><span>Environment policy</span><strong>Server secrets only</strong></label><label className="setting-row"><span>Verification mode</span><strong>No-fake-green</strong></label><label className="setting-row"><span>Workspace scope</span><strong>Private · enterprise</strong></label><button className="primary-button" onClick={() => notify('Settings saved locally')}>Save preferences</button></div>}{activePanel === 'help' && <div className="ops-body"><p className="ops-lede">Use the manual for operating rules, then file a ticket when evidence needs a human decision.</p><div className="help-chapters"><span>01 Start here</span><span>02 Capture workflow</span><span>03 Gabby & approvals</span><span>04 Verification states</span><span>05 Integrations & secrets</span></div><div className="ticket-row"><input value={ticket} onChange={(event) => setTicket(event.target.value)} placeholder="Describe the issue or evidence gap" /><button className="primary-button" onClick={() => { notify(ticket ? 'Help ticket recorded' : 'Add a short issue description'); if (ticket) setTicket('') }}>File ticket</button></div></div>}</section></div>}
-      {toast && <div className="toast"><Check size={15} />{toast}</div>}
+      <div className="bottom-grid"><section className="system-panel"><div className="bottom-title">SYSTEM STATUS</div>{[['CPU','23%'],['GPU','41%'],['RAM','62%'],['VRAM','48%'],['NET','12.4 Mb/s']].map(([label, value]) => <div className="metric" key={label}><span>{label}</span><i><b /></i><strong>{value}</strong></div>)}</section><section className="foley-panel"><div className="bottom-title">FOLEY & SOUND DESIGN <span>00:01:23.456</span></div><div className="waveform">{Array.from({ length: 42 }).map((_, i) => <i key={i} style={{ height: `${18 + ((i * 17) % 45)}%` }} />)}</div><div className="sound-list"><span>FOOTSTEPS_CONCRETE <b>0:03</b></span><span>CLOTH_RUSTLE <b>0:02</b></span><span>METAL_CLINK <b>0:01</b></span><span>WHOOSH_WIND <b>0:02</b></span><span>DOOR_OPEN <b>0:02</b></span></div><div className="panel-actions"><button onClick={() => notify('Recording started')}><Mic2 size={14} /> RECORD</button><button onClick={() => notify('Edit mode enabled')}>EDIT</button><button onClick={() => notify('Mix console opened')}>MIX</button><button onClick={() => notify('Mastering started')}>MASTER</button></div></section><section className="dialogue-panel"><div className="bottom-title">AI DIALOGUE & ADAK</div><div className="dialogue-row"><div className="dialogue-avatar"><div className="character-head small" /></div><div className="dialogue-bubbles"><span>What&apos;s the mission<br />tonight, boss?</span><span>Generate variations<br />with attitude.</span></div></div><div className="dialogue-wave waveform">{Array.from({ length: 30 }).map((_, i) => <i key={i} style={{ height: `${15 + ((i * 23) % 55)}%` }} />)}</div><div className="panel-actions"><button className="primary" onClick={() => notify('ADAK generation started')}>GENERATE</button><button onClick={() => notify('Voice clone opened')}>VOICE CLONE</button><button onClick={() => notify('ADAK flow opened')}>ADAK FLOW</button></div></section><section className="timeline-panel"><div className="bottom-title">TIMELINE / SEQUENCE</div><div className="time-ruler">00:00 <span>00:15</span><span>03:30</span><span>00:45</span><span>01:00</span></div>{timeline.map((item, index) => <div className="timeline-row" key={item}><span>{item}</span><i className={`clip clip-${index}`} /></div>)}</section><section className="audit-panel"><div className="bottom-title">AUDIT FEED <span>(REAL-TIME)</span></div>{['Project Loaded: GODSPEED','Memory Slab Verified','Character Loaded','Animation Applied','Foley Recorded','ADAK Generated','Render Started','Frame Verified','All Systems Go'].map((item, i) => <div className="audit-row" key={item}><Check size={12} /><span>9:4{i}:2{1 + i} PM</span>{item}</div>)}<button className="clear-button" onClick={() => notify('Audit feed cleared')}>CLEAR</button></section></div>
+
+      <footer className="terminal-footer"><div className="footer-actions">{[['BUILD',Code2],['RUN',Play],['TEST',TestTube2],['VERIFY',ShieldCheck],['DEPLOY',Upload],['PUBLISH',Store]].map(([label, Icon]) => <button key={label as string} onClick={() => notify(`${label} action selected`)}><Icon size={16} />{label as string}</button>)}</div><div className="footer-apex"><span>APEX</span><small>REAL-TIME ENGINE</small></div><div className="footer-state"><span className="truth"><ShieldCheck size={24} /> <b>TRUTH: VERIFIED<small>ALL SYSTEMS OPERATIONAL</small></b></span><span className="gabby-state"><Mic2 size={22} /> <b>GABBY ONLINE<small>AI CONCIERGE ACTIVE</small></b><AudioLines size={25} /></span></div></footer>
+      {toast && <div className="terminal-toast"><Check size={15} />{toast}</div>}
     </main>
   )
 }

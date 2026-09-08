@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'APEX 365 | Enterprise workspace',
-  description: 'A calm, connected workspace for turning early signals into aligned, finished work.',
-  generator: 'APEX 365',
+  title: 'APEX TERMINAL | Real-time engine',
+  description: 'The locked APEX 365 owner hub for building, governing, verifying, and operating downstream products.',
+  generator: 'APEX TERMINAL',
   icons: {
     icon: [
       {
